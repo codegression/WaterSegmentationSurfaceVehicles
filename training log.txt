@@ -1,0 +1,7 @@
+Conventional unet training only tampere
+Epoch 99/100
+17/17 [==============================] - 16s 961ms/step - loss: 0.0092 - accuracy: 0.9961 - val_loss: 0.0099 - val_accuracy: 0.9966
+Epoch 100/100
+17/17 [==============================] - 16s 967ms/step - loss: 0.0092 - accuracy: 0.9962 - val_loss: 0.0123 - val_accuracy: 0.9961
+
+

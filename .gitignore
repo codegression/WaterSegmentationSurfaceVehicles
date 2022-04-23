@@ -1,0 +1,9 @@
+datasets
+__pycache__
+*.db
+*.pyc
+*.h5
+*.pkl
+*.pyc
+*.pyo
+*.env
