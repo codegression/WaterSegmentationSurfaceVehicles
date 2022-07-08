@@ -163,4 +163,4 @@ def update_output(list_of_contents, alpha, list_of_names, list_of_dates):
 if __name__ == '__main__':
     print("Running server")
     app.run_server(debug=False, port=8040, host= '0.0.0.0')
-	#app.run_server()
+    #app.run_server()
