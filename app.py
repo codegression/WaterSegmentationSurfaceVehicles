@@ -114,7 +114,7 @@ def parse_contents(contents, filename, date, alpha):
     base64_decoded = base64.b64decode(contents.split(',')[1])
     image = PIL.Image.open(io.BytesIO(base64_decoded))    
     
-    outputimage, timeelapsed = inference.infer(image, alpha)
+    outputimage, timeelapsed = inference.infer(image, alpha, interpolate=False)
     
     buff = io.BytesIO()
     outputimage.save(buff, format="PNG")
