@@ -11,18 +11,19 @@ import numpy as np
 
 
 model = architecture.create()
-model.load_weights('model-weights.h5') #load saved weights
+model.load_weights('dump/model-weights.h5') #load saved weights
 
 #The first inference is usually slow. So let's perform inference with a dummy input so that subsequent ones will be faster
 x_dummy = np.zeros((1, architecture.IMAGE_WIDTH, architecture.IMAGE_HEIGHT, 3), dtype=np.uint8)
 model.predict(x_dummy) 
 
-def infer(image, alpha):
+def infer(image, alpha, interpolate=False):
     """This function performs inference on an input image and turns a blended image with water pixels color-coded.
 
     Args:
         image (PIL.Image): input image
         alpha (int): Opacity value from 0 to 255
+        interpolate (bool): whether water mask will be interpolated when resizing back to the original size
 
     Returns:
         PIL.Image : input image with water pixels shaded in blue
@@ -50,8 +51,14 @@ def infer(image, alpha):
     mask_alpha = np.zeros((preds.shape[0], preds.shape[1], 4), dtype=np.uint8)
     mask_alpha[:,:,2] = preds
 
-    image2 = PIL.Image.fromarray(mask_alpha)
-    image2 = image2.resize(original_size, PIL.Image.NEAREST)
+    image2 = PIL.Image.fromarray(mask_alpha)    
+    
+    if interpolate==False:
+        image2 = image2.resize(original_size, PIL.Image.NEAREST)
+    else:
+        bands = image2.split()
+        bands = [b.resize(original_size, PIL.Image.CUBIC) for b in bands]
+        image2 = PIL.Image.merge('RGBA', bands)
 
     y = np.array(image2)   
     y_blue = y[:,:,2]
