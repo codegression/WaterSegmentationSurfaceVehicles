@@ -8,14 +8,14 @@ This module is used to load data from datasets
 import os
 import numpy as np
 from tqdm import tqdm 
-from skimage.io import imread, imshow
+from skimage.io import imread, imshow, imsave
 from skimage.transform import resize
 import matplotlib.pyplot as plt
       
 
 
 
-def load_intcatchtest(image_width=224, image_height=224, image_channel=3, dataset_path = '../datasets/IntCatch dataset/water_segmentation_test', number_of_samples = 87, x_filename = 'x.npy', y_filename = 'y.npy'):
+def load_intcatchtest(image_width=224, image_height=224, image_channel=3, dataset_path = '../datasets/IntCatch dataset/water_segmentation_test', number_of_samples = 87, x_filename = 'x_test.npy', y_filename = 'y_test.npy'):
     """_summary_
 
     Args:
@@ -31,13 +31,13 @@ def load_intcatchtest(image_width=224, image_height=224, image_channel=3, datase
         np array: X
         np array: Y
     """
-    print("Loading IntCatch training dataset with the following parameters")
-    print(locals().keys())
+    print("Loading IntCatch test dataset with the following parameters")
+    print(locals())
     
     if not os.path.exists(dataset_path + "/" + x_filename) or not os.path.exists(dataset_path + "/" + y_filename):
         folders = next(os.walk(dataset_path))[1]
-        X_train = np.zeros((number_of_samples, image_height, image_width, image_channel), dtype=np.uint8)
-        Y_train = np.zeros((number_of_samples, image_height, image_width, 1), dtype=bool)
+        X = np.zeros((number_of_samples, image_height, image_width, image_channel), dtype=np.uint8)
+        Y = np.zeros((number_of_samples, image_height, image_width, 1), dtype=bool)
         count = 0
         
         files = next(os.walk(dataset_path))[2]   
@@ -57,7 +57,7 @@ def load_intcatchtest(image_width=224, image_height=224, image_channel=3, datase
           
             img = imread(dataset_path + "/" + file)[:,:,:image_channel]  
             img = resize(img, (image_height, image_width), mode='constant', preserve_range=True)
-            X_train[count] = img
+            X[count] = img
             
             
             ####### Image Y ################################
@@ -68,19 +68,19 @@ def load_intcatchtest(image_width=224, image_height=224, image_channel=3, datase
             img = img.astype(np.uint8)
             img[img>0]=255
             img = np.expand_dims(resize(img, (image_height, image_width), mode='constant', preserve_range=True), axis=-1)
-            Y_train[count] = img
+            Y[count] = img
                     
             count = count + 1
         
-        np.save(dataset_path + "/" + x_filename, X_train)
-        np.save(dataset_path + "/" + y_filename, Y_train)
+        np.save(dataset_path + "/" + x_filename, X)
+        np.save(dataset_path + "/" + y_filename, Y)
     else:
-        X_train = np.load(dataset_path + "/" + x_filename)
-        Y_train = np.load(dataset_path + "/" + y_filename)
+        X = np.load(dataset_path + "/" + x_filename)
+        Y = np.load(dataset_path + "/" + y_filename)
         
-    return X_train, Y_train
+    return X, Y
 
-def load_intcatchtrain(image_width=224, image_height=224, image_channel=3, dataset_path = '../datasets/IntCatch dataset/water_segmentation_training', number_of_samples = 191, x_filename = 'x.npy', y_filename = 'y.npy'):
+def load_intcatch(image_width=224, image_height=224, image_channel=3, dataset_path = '../datasets/IntCatch dataset/water_segmentation_training', number_of_samples = 191*2, x_filename = 'x.npy', y_filename = 'y.npy'):
     """_summary_
 
     Args:
@@ -97,12 +97,12 @@ def load_intcatchtrain(image_width=224, image_height=224, image_channel=3, datas
         np array: Y
     """
     print("Loading IntCatch training dataset with the following parameters")
-    print(locals().keys())
+    print(locals())
     
     if not os.path.exists(dataset_path + "/" + x_filename) or not os.path.exists(dataset_path + "/" + y_filename):
         folders = next(os.walk(dataset_path))[1]
-        X_train = np.zeros((number_of_samples, image_height, image_width, image_channel), dtype=np.uint8)
-        Y_train = np.zeros((number_of_samples, image_height, image_width, 1), dtype=bool)
+        X = np.zeros((number_of_samples, image_height, image_width, image_channel), dtype=np.uint8)
+        Y = np.zeros((number_of_samples, image_height, image_width, 1), dtype=bool)
         count = 0
         
         files = next(os.walk(dataset_path))[2]   
@@ -122,29 +122,38 @@ def load_intcatchtrain(image_width=224, image_height=224, image_channel=3, datas
           
             img = imread(dataset_path + "/" + file)[:,:,:image_channel]  
             img = resize(img, (image_height, image_width), mode='constant', preserve_range=True)
-            X_train[count] = img
+            X[count] = img
             
             
             ####### Image Y ################################
             annotation_filename = dataset_path + "/" + name + "-annotation.png"
                    
-            img = imread(annotation_filename, as_gray=True)
-            img = 255 * img
-            img = img.astype(np.uint8)
-            img = np.expand_dims(resize(img, (image_height, image_width), mode='constant', preserve_range=True), axis=-1)
-            Y_train[count] = img
+            img_m = imread(annotation_filename, as_gray=True)
+            img_m = 255 * img_m
+            img_m = img_m.astype(np.uint8)
+            img_m = np.expand_dims(resize(img_m, (image_height, image_width), mode='constant', preserve_range=True), axis=-1)
+            Y[count] = img_m
                     
             count = count + 1
+            
+            # Flip images
+            
+            X[count] = img[:, ::-1]
+            Y[count] = img_m[:, ::-1]
+            count = count + 1
+            
         
-        np.save(dataset_path + "/" + x_filename, X_train)
-        np.save(dataset_path + "/" + y_filename, Y_train)
+        np.save(dataset_path + "/" + x_filename, X)
+        np.save(dataset_path + "/" + y_filename, Y)
     else:
-        X_train = np.load(dataset_path + "/" + x_filename)
-        Y_train = np.load(dataset_path + "/" + y_filename)
+        X = np.load(dataset_path + "/" + x_filename)
+        Y = np.load(dataset_path + "/" + y_filename)
         
-    return X_train, Y_train
+    return X, Y
 
-def load_watersegmentation(image_width=224, image_height=224, image_channel=3, dataset_path = '../datasets/Water segmentation/water_v2/water_v2', number_of_samples = 4413, x_filename = 'x.npy', y_filename = 'y.npy'):
+
+
+def load_watersegmentation(image_width=224, image_height=224, image_channel=3, dataset_path = '../datasets/Water segmentation/water_v2/water_v2', number_of_samples = 4413*2, x_filename = 'x.npy', y_filename = 'y.npy'):
     """_summary_
 
     Args:
@@ -161,11 +170,11 @@ def load_watersegmentation(image_width=224, image_height=224, image_channel=3, d
         np array: Y
     """
     print("Loading water segmentation dataset with the following parameters")
-    print(locals().keys())
+    print(locals())
     if not os.path.exists(dataset_path + "/" + x_filename) or not os.path.exists(dataset_path + "/" + y_filename):
         folders = next(os.walk(dataset_path + "/JPEGImages"))[1]
-        X_train = np.zeros((number_of_samples, image_height, image_width, image_channel), dtype=np.uint8)
-        Y_train = np.zeros((number_of_samples, image_height, image_width, 1), dtype=bool)
+        X = np.zeros((number_of_samples, image_height, image_width, image_channel), dtype=np.uint8)
+        Y = np.zeros((number_of_samples, image_height, image_width, 1), dtype=bool)
         count = 0
         
         
@@ -181,8 +190,11 @@ def load_watersegmentation(image_width=224, image_height=224, image_channel=3, d
                 
                 img = imread(filename)[:,:,:image_channel]  
                 img = resize(img, (image_height, image_width), mode='constant', preserve_range=True)
-                X_train[count] = img
+                X[count] = img
                 
+                #imsave("img1.png", img)
+                
+            
                 
                 ####### Image Y ################################
                 annotation_filename = dataset_path + "/Annotations/" + folder + "/" + file
@@ -193,23 +205,34 @@ def load_watersegmentation(image_width=224, image_height=224, image_channel=3, d
                 elif lastannotation != "":
                     annotation_filename = lastannotation
                 
-                img = imread(annotation_filename, as_gray=True)
-                img = 255 * img
-                img = img.astype(np.uint8)
-                img = np.expand_dims(resize(img, (image_height, image_width), mode='constant', preserve_range=True), axis=-1)
-                Y_train[count] = img
-                        
+                img_m = imread(annotation_filename, as_gray=True)
+                img_m = 255 * img_m
+                img_m = img_m.astype(np.uint8)
+                img_m = np.expand_dims(resize(img_m, (image_height, image_width), mode='constant', preserve_range=True), axis=-1)
+                Y[count] = img_m
+                
+                #imsave("img_m1.png", img_m)
                 count = count + 1
                 #################################################
-        np.save(dataset_path + "/" + x_filename, X_train)
-        np.save(dataset_path + "/" + y_filename, Y_train)
+                                
+                #Flip image horizontally               
+                #imsave("img2.png", img)
+                #imsave("img_m2.png", img_m)
+                X[count] = img[:, ::-1]
+                Y[count] = img_m[:, ::-1]
+                count = count + 1
+                
+               
+                
+        np.save(dataset_path + "/" + x_filename, X)
+        np.save(dataset_path + "/" + y_filename, Y)
     else:
-        X_train = np.load(dataset_path + "/" + x_filename)
-        Y_train = np.load(dataset_path + "/" + y_filename)
+        X = np.load(dataset_path + "/" + x_filename)
+        Y = np.load(dataset_path + "/" + y_filename)
         
-    return X_train, Y_train
+    return X, Y
 
-def load_tampere(image_width=224, image_height=224, image_channel=3, dataset_path = '../datasets/Tampere-WaterSeg', number_of_samples = 600, x_filename = 'x.npy', y_filename = 'y.npy'):
+def load_tampere(train=True, image_width=224, image_height=224, image_channel=3, dataset_path = '../datasets/Tampere-WaterSeg', number_of_samples = 800, x_filename = 'x.npy', y_filename = 'y.npy'):
     """_summary_
 
     Args:
@@ -226,45 +249,72 @@ def load_tampere(image_width=224, image_height=224, image_channel=3, dataset_pat
         np array: Y
     """
     print("Loading Tempere dataset with the following parameters")
-    print(image_width, image_height, image_channel)
+    print(locals())
     folders = next(os.walk(dataset_path))[1]    
     data_folders = [x for x in folders if not x.endswith('_mask')]
     mask_folders = [x for x in folders if x.endswith('_mask')]
-    X_train = np.zeros((number_of_samples, image_height, image_width, image_channel), dtype=np.uint8)
-    Y_train = np.zeros((number_of_samples, image_height, image_width, 1), dtype=bool)
+    X = np.zeros((number_of_samples, image_height, image_width, image_channel), dtype=np.uint8)
+    Y = np.zeros((number_of_samples, image_height, image_width, 1), dtype=bool)
 
     if not os.path.exists(dataset_path + "/" + x_filename):
         count = 0
         for i in range(3):
+            if train==True:
+                if data_folders[i]=="channel":  #Reserve the "channel" shots for testing
+                    continue
+            else:
+                if data_folders[i]!="channel":  
+                    continue
+            
             files = next(os.walk(dataset_path + "/" + data_folders[i]))[2]
             for file in files:
                 print(str(count) + " " + file)
                 img = imread(dataset_path + "/" + data_folders[i] + "/" + file)[:,:,:image_channel]  
                 img = resize(img, (image_height, image_width), mode='constant', preserve_range=True)
-                X_train[count] = img
+                X[count] = img
                 count = count + 1
-        np.save(dataset_path + "/" + x_filename, X_train)
+                
+                if train==True:
+                    #Flip image horizontally
+                    X[count] = img[:, ::-1]      
+                    count = count + 1                
+                                
+                
+        np.save(dataset_path + "/" + x_filename, X)
     else:
-        X_train = np.load(dataset_path + "/" + x_filename)
+        X = np.load(dataset_path + "/" + x_filename)
         
     if not os.path.exists(dataset_path + "/" + y_filename):
         count = 0
         for i in range(3):
+            if train==True:
+                if mask_folders[i]=="channel_mask":  #Reserve the "channel" shots for testing
+                    continue
+            else:
+                if mask_folders[i]!="channel_mask":  
+                    continue
+                                      
             files = next(os.walk(dataset_path + "/" + mask_folders[i]))[2]
             for file in files:
                 print(str(count) + " " + file)                
                 img = imread(dataset_path + "/" + mask_folders[i] + "/" + file)
                 img = np.expand_dims(resize(img, (image_height, image_width), mode='constant', preserve_range=True), axis=-1)
-                Y_train[count] = img
+                Y[count] = img
                 count = count + 1
-        np.save(dataset_path + "/" + y_filename, Y_train)
+                
+                if train==True:
+                    #Flip image horizontally       
+                    Y[count] = img[:, ::-1]    
+                    count = count + 1   
+                                
+        np.save(dataset_path + "/" + y_filename, Y)
     else:
-        Y_train = np.load(dataset_path + "/" + y_filename)
+        Y = np.load(dataset_path + "/" + y_filename)
             
-    return X_train, Y_train
+    return X, Y
 
 
 
 if __name__ == '__main__':
-    load_intcatchtest()
+    load_tampere()
     #load_tampere()
