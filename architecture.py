@@ -20,9 +20,9 @@ def create():
                 tf.keras.Model: the main model
         """
         resnet = tf.keras.applications.ResNet50(weights='imagenet')
-
-        for k,v in resnet._get_trainable_state().items():
-                k.trainable = False
+        #print(len(resnet.layers))
+        for layer in resnet.layers:
+            layer.trainable = False
 
         inputlayer = resnet.input
         skip1 = resnet.get_layer("conv1_relu").output #112, 112,64
@@ -99,4 +99,4 @@ def create():
         return model
 
 if __name__ == '__main__':
-        create().summary()
+        create()
